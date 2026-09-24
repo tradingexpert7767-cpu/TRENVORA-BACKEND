@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Phase 0/2: identity foundation. Trading, journal, DNA, replay, strategy and
+// options tables are added incrementally in their owning phase rather than
+// modeled speculatively here.
+// ---------------------------------------------------------------------------
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  PRO_PLUS
+}
+
+enum RiskPreference {
+  CONSERVATIVE
+  MODERATE
+  AGGRESSIVE
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  profile      Profile?
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Profile {
+  id                  String          @id @default(uuid()) @db.Uuid
+  userId              String          @unique @map("user_id") @db.Uuid
+  displayName         String?         @map("display_name")
+  tradingExperience    String?         @map("trading_experience")
+  preferredInstruments String[]        @map("preferred_instruments")
+  riskPreference       RiskPreference? @map("risk_preference")
+  onboardingCompletedAt DateTime?      @map("onboarding_completed_at")
+  subscriptionTier     SubscriptionTier @default(FREE) @map("subscription_tier")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("audit_logs")
+}
