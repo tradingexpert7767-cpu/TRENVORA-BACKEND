@@ -10,10 +10,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const isProd = config.get<string>('nodeEnv') === 'production';
     const pool = new Pool({
       connectionString: config.get<string>('databaseUrl'),
-      // Force IPv4 — Render free tier cannot reach Supabase via IPv6.
       // Dev: relax cert chain verification for corporate proxy/AV TLS interception.
       ssl: isProd ? true : { rejectUnauthorized: false },
-      family: isProd ? 4 : undefined,
     });
     super({
       adapter: new PrismaPg(pool),

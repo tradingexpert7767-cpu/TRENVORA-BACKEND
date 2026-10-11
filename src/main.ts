@@ -1,3 +1,7 @@
+import { setDefaultResultOrder } from 'node:dns';
+// Render free tier has no IPv6 egress; Supabase resolves to IPv6 by default.
+if (process.env.NODE_ENV === 'production') setDefaultResultOrder('ipv4first');
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
