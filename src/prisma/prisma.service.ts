@@ -13,7 +13,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         // self-signed cert, which breaks strict chain verification against
         // Supabase's certificate. Safe here because the connection is still
         // encrypted — only certificate authority verification is relaxed.
-        ssl: config.get<string>('nodeEnv') === 'production' ? undefined : { rejectUnauthorized: false },
+        ssl: config.get<string>('nodeEnv') === 'production' ? true : { rejectUnauthorized: false },
       }),
     });
   }

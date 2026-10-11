@@ -29,7 +29,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       : 'Something went wrong. Please try again.';
 
     if (!isHttp) {
-      this.logger.error(exception instanceof Error ? exception.stack : exception);
+      if (exception instanceof Error && 'code' in exception) {
+        const prismaErr = exception as Error & { code?: string; meta?: unknown };
+        this.logger.error(`${exception.constructor.name} code=${prismaErr.code} meta=${JSON.stringify(prismaErr.meta)} ${exception.message}`);
+      } else {
+        this.logger.error(exception instanceof Error ? exception.stack : exception);
+      }
     }
 
     response.status(status).json({
