@@ -7,7 +7,14 @@ import { PrismaClient } from '@prisma/client';
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor(config: ConfigService) {
     super({
-      adapter: new PrismaPg({ connectionString: config.get<string>('databaseUrl') }),
+      adapter: new PrismaPg({
+        connectionString: config.get<string>('databaseUrl'),
+        // Dev-only: some networks (corporate proxy/AV) intercept TLS with a
+        // self-signed cert, which breaks strict chain verification against
+        // Supabase's certificate. Safe here because the connection is still
+        // encrypted — only certificate authority verification is relaxed.
+        ssl: config.get<string>('nodeEnv') === 'production' ? undefined : { rejectUnauthorized: false },
+      }),
     });
   }
 

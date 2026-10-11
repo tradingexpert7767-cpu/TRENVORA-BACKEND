@@ -27,7 +27,9 @@ enum RiskPreference {
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
-  passwordHash String   @map("password_hash")
+  name         String?
+  passwordHash String?  @map("password_hash")
+  googleId     String?  @unique @map("google_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
