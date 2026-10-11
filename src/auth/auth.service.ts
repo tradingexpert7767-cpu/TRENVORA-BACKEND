@@ -138,6 +138,56 @@ export class AuthService {
     return this.issueSession(user, user.profile);
   }
 
+  async forgotPassword(userEmail: string) {
+    const normalizedEmail = userEmail.toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
+    // Always return success to prevent email enumeration
+    if (!user || user.googleId && !user.passwordHash) return { sent: true };
+
+    await this.prisma.otpCode.updateMany({
+      where: { userId: user.id, purpose: 'password_reset', usedAt: null },
+      data: { usedAt: new Date() },
+    });
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await this.prisma.otpCode.create({
+      data: { userId: user.id, code, purpose: 'password_reset', expiresAt },
+    });
+
+    await this.email.sendPasswordReset(normalizedEmail, user.name, code);
+    return { sent: true };
+  }
+
+  async resetPassword(userEmail: string, code: string, newPassword: string) {
+    const normalizedEmail = userEmail.toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (!user) throw new BadRequestException('Invalid or expired code');
+
+    const otp = await this.prisma.otpCode.findFirst({
+      where: {
+        userId: user.id,
+        code,
+        purpose: 'password_reset',
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!otp) throw new BadRequestException('Invalid or expired code');
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.$transaction([
+      this.prisma.otpCode.update({ where: { id: otp.id }, data: { usedAt: new Date() } }),
+      this.prisma.user.update({ where: { id: user.id }, data: { passwordHash, emailVerified: true } }),
+    ]);
+
+    return { reset: true };
+  }
+
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { profile: true } });
     if (!user) throw new UnauthorizedException();

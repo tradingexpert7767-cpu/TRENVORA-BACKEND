@@ -6,6 +6,8 @@ import { SignupDto } from './dto/signup.dto.js';
 import { GoogleLoginDto } from './dto/google-login.dto.js';
 import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 import { ResendOtpDto } from './dto/resend-otp.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 
 @Controller('auth')
@@ -28,6 +30,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   resendOtp(@Body() dto: ResendOtpDto) {
     return this.auth.resendOtp(dto.email);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.auth.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.auth.resetPassword(dto.email, dto.code, dto.newPassword);
   }
 
   @Post('login')
