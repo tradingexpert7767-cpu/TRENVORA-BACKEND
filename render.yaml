@@ -3,7 +3,7 @@ services:
     name: trenvora-backend
     runtime: node
     plan: free
-    buildCommand: npm install && npx prisma migrate deploy && npx prisma generate && npm run build
+    buildCommand: npm install && NODE_OPTIONS='--dns-result-order=ipv4first' npx prisma migrate deploy && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
